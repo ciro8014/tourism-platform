@@ -1,0 +1,37 @@
+cat > .gitignore << 'EOF'
+# PDFs compilados (se generan desde el .typ)
+*.pdf
+
+# Backups
+*.bak
+*.tmp
+
+# Archivos comprimidos
+*.zip
+*.tar.gz
+
+# Notas personales (no para entregar)
+CHECKLIST_VIDEO.md
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs locales
+*.log
+
+# Variables de entorno reales (no las del ConfigMap)
+.env
+.env.local
+EOF
+
+echo "✓ .gitignore creado"

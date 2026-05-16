@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tourism
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tourism-config
+  namespace: tourism
+data:
+  POSTGRES_DB: tourism_db
+  POSTGRES_USER: tourism
+  DATABASE_URL: "postgresql://tourism:tourism@postgres-service:5432/tourism_db"
+  REDIS_URL: "redis://redis-service:6379"
+  AUTH_SERVICE_URL: "http://auth-service:8000"
+  TOURS_SERVICE_URL: "http://tours-service:8000"
+  BOOKINGS_SERVICE_URL: "http://bookings-service:8000"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tourism-secrets
+  namespace: tourism
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: tourism
