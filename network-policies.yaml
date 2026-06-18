@@ -1,0 +1,166 @@
+# =============================================================================
+#  NetworkPolicies - namespace "tourism"
+#  Estrategia: default-deny de INGRESO + apertura por flujo legitimo.
+#
+#  NOTA IMPORTANTE (malla + NetworkPolicies):
+#  Entre pods MESHED, Linkerd transporta el trafico proxy-a-proxy por su
+#  puerto de entrada (4143), NO por el puerto del servicio. Por eso las
+#  reglas entre servicios meshed NO especifican puerto: se restringe por
+#  IDENTIDAD DE ORIGEN (que pod puede conectarse). El control fino de
+#  puerto/L7 se delega a la malla (Server/AuthorizationPolicy de Linkerd).
+#  Solo conservan puerto los origenes NO-meshed (Ingress NGINX) y el
+#  scrape de Prometheus al puerto admin del proxy (4191/4190).
+# =============================================================================
+
+# 1. Default-deny de ingreso
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: tourism
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# 2. Observabilidad: Prometheus (linkerd-viz) -> puerto admin del proxy
+#    (origen meshed, pero 4191/4190 NO se redirigen: van directo al admin)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-linkerd-viz-scrape
+  namespace: tourism
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd-viz
+      ports:
+        - port: 4191
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+---
+# 3. Ingress NGINX (NO-meshed) -> api-gateway  [conserva puerto 8000]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-gateway
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8000
+          protocol: TCP
+---
+# 4. api-gateway -> auth-service  [meshed->meshed: sin puerto]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-auth
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: auth-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+---
+# 5. tours-service <- api-gateway Y bookings-service  [meshed->meshed: sin puerto]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-tours
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: tours-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+        - podSelector:
+            matchLabels:
+              app: bookings-service
+---
+# 6. api-gateway -> bookings-service  [meshed->meshed: sin puerto]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-bookings
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: bookings-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+---
+# 7. postgres <- auth, tours, bookings  [meshed->meshed: sin puerto]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-postgres
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: auth-service
+        - podSelector:
+            matchLabels:
+              app: tours-service
+        - podSelector:
+            matchLabels:
+              app: bookings-service
+---
+# 8. redis <- solo tours-service  [meshed->meshed: sin puerto]
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-redis
+  namespace: tourism
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: tours-service
