@@ -19,16 +19,6 @@ for svc in "${SERVICES[@]}"; do
   echo ""
   echo "═══ ${svc} ═══"
 
-  # Backup del main.py original (por si quieres comparar)
-  if [ ! -f "services/${svc}/main.py.bak" ]; then
-    cp "services/${svc}/main.py" "services/${svc}/main.py.bak"
-    echo "✓ Backup guardado en services/${svc}/main.py.bak"
-  fi
-
-  # Reemplazar con la versión nueva
-  cp "${svc}/main.py" "services/${svc}/main.py"
-  echo "✓ main.py reemplazado con versión 1.1.0"
-
   # Reconstruir imagen con un tag NUEVO para forzar a Kubernetes a actualizar
   docker build -t "tourism/${svc}:1.1.0" "./services/${svc}"
   docker tag "tourism/${svc}:1.1.0" "tourism/${svc}:latest"

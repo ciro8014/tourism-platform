@@ -65,9 +65,8 @@
 // ═══════════════════════════════════════
 
 #align(center)[
-  #v(3cm)
-  //#image("https://upload.wikimedia.org/wikipedia/commons/c/c5/Escudo_UNSAAC.png", width: 3cm)
-
+  // #v(3cm)
+  
   #v(1cm)
   #text(size: 14pt)[*UNIVERSIDAD NACIONAL DE SAN ANTONIO ABAD DEL CUSCO*]
 
@@ -77,7 +76,9 @@
   #v(0.3cm)
   #text(size: 12pt)[Escuela Profesional de Ingeniería Informática y de Sistemas]
 
-  #v(3cm)
+  #image("Escudo_UNSAAC.png", width: 6cm)
+
+
   #text(size: 16pt, weight: "bold")[
     Plataforma multi-tenant para gestión turística \
     desplegada en Kubernetes con microservicios
@@ -90,7 +91,7 @@
     controlada de APIs hacia clientes externos
   ]
 
-  #v(3cm)
+  #v(1cm)
   #table(
     columns: (auto, auto),
     align: left,
