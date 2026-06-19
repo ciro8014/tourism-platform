@@ -1,0 +1,30 @@
+# =============================================================================
+#  Autorizacion de Linkerd para que KEDA consulte el Prometheus de linkerd-viz.
+#  linkerd-viz protege su Prometheus con una AuthorizationPolicy (solo sus
+#  componentes con identidad mTLS). KEDA viene del namespace 'keda' sin mTLS,
+#  asi que se le autoriza por RED (NetworkAuthentication sobre el CIDR de pods).
+#  Sin esto, la query de KEDA recibe HTTP 403 y el HPA queda en <unknown>.
+# =============================================================================
+apiVersion: policy.linkerd.io/v1alpha1
+kind: NetworkAuthentication
+metadata:
+  name: keda-prometheus-net
+  namespace: linkerd-viz
+spec:
+  networks:
+    - cidr: 10.244.0.0/16        # red de pods del cluster Kind
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: prometheus-allow-keda
+  namespace: linkerd-viz
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: prometheus-admin        # Server del Prometheus de viz
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: NetworkAuthentication
+      name: keda-prometheus-net
