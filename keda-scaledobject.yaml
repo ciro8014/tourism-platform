@@ -1,0 +1,30 @@
+# =============================================================================
+#  KEDA ScaledObject - autoescalado del api-gateway por RPS de la malla
+#  Metrica: request_total (inbound) de Linkerd, leida desde el Prometheus
+#  de linkerd-viz. KEDA crea un HPA por detras con target AverageValue.
+#    desiredReplicas = ceil( RPS_total / threshold )
+# =============================================================================
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: api-gateway-rps
+  namespace: tourism
+spec:
+  scaleTargetRef:
+    name: api-gateway            # Deployment a escalar
+  minReplicaCount: 2             # nunca baja de 2 (lo actual)
+  maxReplicaCount: 6             # tope
+  pollingInterval: 15            # KEDA consulta Prometheus cada 15s
+  cooldownPeriod: 60             # espera tras dejar de superar el umbral
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          # baja el ventana por defecto (300s) para que el demo no sea eterno
+          stabilizationWindowSeconds: 60
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus.linkerd-viz.svc.cluster.local:9090
+        query: sum(rate(request_total{namespace="tourism", deployment="api-gateway", direction="inbound"}[1m]))
+        threshold: "10"          # RPS objetivo por replica
