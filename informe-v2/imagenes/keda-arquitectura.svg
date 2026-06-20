@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#444"/>
+    </marker>
+  </defs>
+  <style>
+    .box{fill:#f4f6f8;stroke:#5a6b7b;stroke-width:1.5;rx:8;}
+    .acc{fill:#eef4fb;stroke:#2f6fb0;stroke-width:1.5;rx:8;}
+    .lbl{font-size:14px;fill:#1c2733;font-weight:bold;}
+    .sub{font-size:11px;fill:#54606b;}
+    .edge{stroke:#444;stroke-width:1.6;fill:none;}
+    .etxt{font-size:11px;fill:#33424f;}
+    .title{font-size:13px;fill:#54606b;font-style:italic;}
+  </style>
+
+  <!-- Camino de la petición (arriba) -->
+  <text x="20" y="34" class="title">Camino de la petición</text>
+  <rect class="box" x="20"  y="50" width="120" height="56" rx="8"/>
+  <text x="80"  y="74" text-anchor="middle" class="lbl">k6</text>
+  <text x="80"  y="92" text-anchor="middle" class="sub">generador de carga</text>
+
+  <rect class="box" x="200" y="50" width="140" height="56" rx="8"/>
+  <text x="270" y="74" text-anchor="middle" class="lbl">Ingress NGINX</text>
+  <text x="270" y="92" text-anchor="middle" class="sub">(no meshed)</text>
+
+  <rect class="acc" x="410" y="44" width="180" height="70" rx="8"/>
+  <text x="500" y="68" text-anchor="middle" class="lbl">api-gateway</text>
+  <text x="500" y="85" text-anchor="middle" class="sub">meshed (+ proxy Linkerd)</text>
+  <text x="500" y="101" text-anchor="middle" class="sub">2 → 6 réplicas</text>
+
+  <!-- Lazo de control (abajo) -->
+  <text x="20" y="250" class="title">Lazo de autoescalado</text>
+  <rect class="box" x="300" y="266" width="200" height="64" rx="8"/>
+  <text x="400" y="292" text-anchor="middle" class="lbl">Prometheus</text>
+  <text x="400" y="310" text-anchor="middle" class="sub">(linkerd-viz)</text>
+
+  <rect class="acc" x="610" y="266" width="150" height="64" rx="8"/>
+  <text x="685" y="302" text-anchor="middle" class="lbl">KEDA</text>
+
+  <rect class="acc" x="610" y="150" width="150" height="56" rx="8"/>
+  <text x="685" y="183" text-anchor="middle" class="lbl">HPA</text>
+
+  <!-- Aristas: camino petición -->
+  <path class="edge" d="M140,78 L196,78" marker-end="url(#arrow)"/>
+  <text x="168" y="70" text-anchor="middle" class="etxt">peticiones</text>
+  <path class="edge" d="M340,78 L406,78" marker-end="url(#arrow)"/>
+
+  <!-- gateway -> Prometheus (métricas) -->
+  <path class="edge" d="M470,114 C470,200 410,210 400,262" marker-end="url(#arrow)"/>
+  <text x="360" y="200" text-anchor="end" class="etxt">request_total (RPS)</text>
+
+  <!-- KEDA -> Prometheus (consulta) -->
+  <path class="edge" d="M610,298 L504,298" marker-end="url(#arrow)"/>
+  <text x="557" y="290" text-anchor="middle" class="etxt">consulta PromQL</text>
+
+  <!-- KEDA -> HPA -->
+  <path class="edge" d="M685,266 L685,208" marker-end="url(#arrow)"/>
+  <text x="695" y="240" class="etxt">métrica externa</text>
+
+  <!-- HPA -> api-gateway (escala) -->
+  <path class="edge" d="M610,170 C560,150 540,130 540,116" marker-end="url(#arrow)"/>
+  <text x="600" y="138" text-anchor="middle" class="etxt">escala réplicas</text>
+</svg>
